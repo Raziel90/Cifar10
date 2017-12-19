@@ -257,6 +257,10 @@ with tf.Session(graph=graph) as sess:
     threads = tf.train.start_queue_runners(coord=coord)
     valid_data, valid_labels, test_data, test_labels = sess.run([tf_valid_dataset,tf_valid_dataset_labels,tf_test_dataset,tf_test_dataset_labels])
     print('Initialized')
+    tr_acc=[]
+    valid_acc=[]
+    test_acc=[]
+    loss_in_time=[]
     for step in range(num_steps):
         
         batch_data, batch_labels = sess.run([tf_train_dataset,tf_train_labels])
@@ -268,11 +272,16 @@ with tf.Session(graph=graph) as sess:
             ], feed_dict=feed_dict)
 
         if (step % 300 == 0):
+            tr_a = accuracy(predictions,batch_labels)
+            val_a = accuracy(test_prediction.eval(), test_labels)
+            tr_accuracy += tr_a
+            val_accuracy += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy: %.1f%%' % accuracy(predictions,batch_labels))
-            print('Validation accuracy: %.1f%%' % accuracy(test_prediction.eval(), test_labels))
+            print('Minibatch accuracy: %.1f%%' % tr_a)
+            print('Validation accuracy: %.1f%%' % val_a)
                 #print(r)
-    print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), test_labels))
+    test_acc = accuracy(test_prediction.eval(), test_labels)
+    print('Test accuracy: %.1f%%' % test_acc)
     coord.request_stop()
     coord.join(threads)
 
