@@ -28,9 +28,9 @@ def _get_batch_names():
     files['validation'] = [tr_data_files[4]]
     files['test'] = [test_data_files[0]]
     return files
+
+
 # extract data from pickle files
-
-
 def unpickle(file):
     with open(file, 'rb') as fo:
         #file_dict = pickle.load(fo, encoding='bytes') #use if python 3 but seems not to work with TF-slim

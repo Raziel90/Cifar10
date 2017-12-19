@@ -5,43 +5,14 @@ import tensorflow as tf
 #import pickle
 from six.moves import cPickle as pickle
 from six.moves import range
-
+import matplotlib.pyplot as plt
+import os
 
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-
-
-tr_data_files = ['data_batch_1', 'data_batch_2',
-                 'data_batch_3', 'data_batch_4', 'data_batch_5']
-test_data_files = ['test_batch']
-
-"""
-pickle_file = 'notMNIST.pickle'
-
-with open(pickle_file, 'rb') as f:
-  save = pickle.load(f)
-  train_dataset = save['train_dataset']
-  train_labels = save['train_labels']
-  valid_dataset = save['valid_dataset']
-  valid_labels = save['valid_labels']
-  test_dataset = save['test_dataset']
-  test_labels = save['test_labels']
-  del save  # hint to help gc free up memory
-  print('Training set', train_dataset.shape, train_labels.shape)
-  print('Validation set', valid_dataset.shape, valid_labels.shape)
-  print('Test set', test_dataset.shape, test_labels.shape)
-
-"""
-
-
-# Reformat into a TensorFlow-friendly shape:
-# convolutions need the image data formatted as a cube (width by height by #channels)
-# labels as float 1-hot encodings.
-def unpickle(file):
-    with open(file, 'rb') as fo:
-        dict = pickle.load(fo, encoding='bytes')
-    return dict
+batch_len = 100
+examples_per_mode = {'train' : 45000, 'validation' : 5000, 'test' : 10000}
 
 """
 def reformat(dataset, labels):
@@ -56,34 +27,92 @@ print('Training set', train_dataset.shape, train_labels.shape)
 print('Validation set', valid_dataset.shape, valid_labels.shape)
 print('Test set', test_dataset.shape, test_labels.shape)
 """
+def get_files(basepath='./',mode='train'):
+    return os.path.join(basepath,mode+'.tfrecords')
 
-def load_data_set(basepath='./'):
-    """Loads and converts the dataset to a tf friendly format """
-    batch_data = [] 
-    batch_labels = []
-    for batch_file in tr_data_files:
-        batch_dict = unpickle(basepath + batch_file)
-        print(batch_dict[b'batch_label'].decode("utf-8") )
-        batch_data += [batch_dict[b'data'].reshape((-1, num_channels, image_size, image_size)).astype(
-            np.float32).transpose((0, 2, 3, 1))/255]  # normalised (n_samples,im_size,im_size,n_channels)
-        batch_labels += [(np.arange(num_labels) == np.array(batch_dict[b'labels'])
-                          [:, None]).astype(np.float32)]  # 1-Hot encoded
-    train_data = np.concatenate(batch_data)
-    train_labels = np.concatenate(batch_labels)
-    del batch_dict, batch_data, batch_labels
-    test_dict = unpickle(basepath + test_data_files[0])  # only one test file
-    print(test_dict[b'batch_label'].decode("utf-8") )
-    test_data = test_dict[b'data'].reshape(
-        (-1, num_channels, image_size, image_size)).astype(np.float32).transpose((0, 2, 3, 1))/255
-    test_labels = (np.arange(num_labels) == np.array(
-        test_dict[b'labels'])[:, None]).astype(np.float32)
+def serialize(input_file):
 
-    return train_data, train_labels, test_data, test_labels
+    filename_queue = tf.train.string_input_producer([input_file],num_epochs=1)
+
+    reader = tf.TFRecordReader()
+    _, serialised_example = reader.read(filename_queue)
+
+    return serialised_example
+
+def TFR_parse(example):
+    features_desc = { 
+    'data': tf.FixedLenFeature([], tf.string) ,
+    'labels': tf.FixedLenFeature([],tf.int64)
+    }
+   
+    features = tf.parse_single_example(example,features=features_desc)
+    
+    image = tf.decode_raw(features['data'],tf.uint8)
+    image.set_shape([num_channels * image_size * image_size])
+    image = tf.cast(
+        tf.transpose(
+            tf.reshape(image,( num_channels, image_size, image_size)
+                ),( 1, 2, 0)
+            ),tf.float32)
+    label = tf.cast(features['labels'],tf.int32)
+    return image,label
+
+def make_batch(batch_size=100,mode='train',basepath='./'):
+
+    filename = get_files(basepath,mode)
+    print(filename)
+    image,label = TFR_parse(serialize(filename))
+    #dataset = tf.contrib.data.TFRecordDataset(filename).repeat()
+
+    #dataset = dataset.map(TFR_parse, num_threads=batch_size, output_buffer_size = 2 * batch_size)
+
+    if mode == 'train':
+        min_examples = int(examples_per_mode['train'] * 0.4) # so that the shuffeling is good enough
+
+        data_batch, label_batch = tf.train.shuffle_batch([image,label],batch_size=batch_len,capacity=examples_per_mode['train'],min_after_dequeue=min_examples)
+
+    else:
+        min_examples = int(examples_per_mode[mode] * 0.4) # so that the shuffeling is good enough
+
+        data_batch, label_batch = tf.train.batch([image,label],batch_size=examples_per_mode[mode],capacity=examples_per_mode[mode],min_after_dequeue=min_examples)
+        #dataset = dataset.shuffe(buffer_size=min_queue_examples + 3 * batch_size)
+
+    #finally create the batches
+    #dataset = dataset.batch(batch_size)
+    #iterator = dataset.make_one_shot_iterator()
+    #data_batch, label_batch = iterator.get_next()
+
+    return data_batch,label_batch
+
+image,lab = make_batch(batch_len,'train',basepath='./cifar-10-batches-py')
+# The op for initializing the variables.
+init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+
+with tf.Session() as session:
+    session.run(init_op)
+    
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+
+    final_image,final_lab = session.run([image,lab])
+    print(len(final_image),final_image.shape,final_lab.shape)
+    
+    plt.imshow(final_image[10,:,:,:])
+    plt.show()
 
 
-train_dataset, train_labels, test_dataset, test_labels = load_data_set()
+"""
+with graph.as_default() as g:
+    pass
 
+with tf.Session(graph) as sess:
+    image,lab=read_TFR('./cifar-10-batches-py/train.tfrecord')
+    
 
+    plt.imshow(image.eval(sess))
+    plt.show()
+"""
 """
 
 def accuracy(predictions, labels):
