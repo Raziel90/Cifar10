@@ -7,11 +7,11 @@ from six.moves import cPickle as pickle
 from six.moves import range
 import matplotlib.pyplot as plt
 import os
-
+import cv2
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 100
+batch_len = 200
 examples_per_mode = {'train' : 45000, 'validation' : 5000, 'test' : 10000}
 
 """
@@ -51,10 +51,14 @@ def TFR_parse(example):
     image.set_shape([num_channels * image_size * image_size])
     image = tf.cast(
         tf.transpose(
-            tf.reshape(image,( num_channels, image_size, image_size)
+            tf.reshape(image,(num_channels, image_size, image_size)
                 ),( 1, 2, 0)
             ),tf.float32)
-    label = tf.cast(features['labels'],tf.int32)
+    #label = tf.cast(features['labels'],tf.int32)
+    label = tf.cast(
+        tf.one_hot(
+            tf.cast(features['labels'],tf.int32),num_labels),
+        tf.float32)
     return image,label
 
 def make_batch(batch_size=100,mode='train',basepath='./'):
@@ -74,7 +78,7 @@ def make_batch(batch_size=100,mode='train',basepath='./'):
     else:
         min_examples = int(examples_per_mode[mode] * 0.4) # so that the shuffeling is good enough
 
-        data_batch, label_batch = tf.train.batch([image,label],batch_size=examples_per_mode[mode],capacity=examples_per_mode[mode],min_after_dequeue=min_examples)
+        data_batch, label_batch = tf.train.batch([image,label],batch_size=examples_per_mode[mode],capacity=examples_per_mode[mode])
         #dataset = dataset.shuffe(buffer_size=min_queue_examples + 3 * batch_size)
 
     #finally create the batches
@@ -84,54 +88,19 @@ def make_batch(batch_size=100,mode='train',basepath='./'):
 
     return data_batch,label_batch
 
-image,lab = make_batch(batch_len,'train',basepath='./cifar-10-batches-py')
-# The op for initializing the variables.
-init_op = tf.group(tf.global_variables_initializer(),
-                   tf.local_variables_initializer())
 
-with tf.Session() as session:
-    session.run(init_op)
-    
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
+#Definition of the Architecture
 
-    final_image,final_lab = session.run([image,lab])
-    print(len(final_image),final_image.shape,final_lab.shape)
-    
-    plt.imshow(final_image[10,:,:,:])
-    plt.show()
-
-
-"""
-with graph.as_default() as g:
-    pass
-
-with tf.Session(graph) as sess:
-    image,lab=read_TFR('./cifar-10-batches-py/train.tfrecord')
-    
-
-    plt.imshow(image.eval(sess))
-    plt.show()
-"""
-"""
-
-def accuracy(predictions, labels):
-    return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-            / predictions.shape[0])
-
-
-
-image_size = 28
-num_labels = 10
-num_channels = 1 # grayscale
-
-batch_size = 200
+#batch_size = 200
 patch_size = [5,3,2]
 depth = [6,18,50]
 pool_strides = [2, 2, 2]
 num_hidden = 128
 
-graph = tf.Graph()
+def accuracy(predictions, labels):
+    return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
+            / predictions.shape[0])
+
 def define_conv(x,W,b,stride=1,keep_prob=1):
     conv1 = tf.nn.conv2d(input=x,filter=W,strides=[1, stride, stride, 1],padding="SAME")
     conv1 = tf.nn.bias_add(conv1,b)
@@ -144,15 +113,25 @@ def define_max_pool(x,k=2):
     
     return tf.nn.max_pool(x,strides=[1, k, k, 1],ksize=[1, k, k, 1],padding="SAME")
 
+
+
+graph = tf.Graph()
 with graph.as_default() as g:
+    tf_train_dataset,tf_train_labels = make_batch(batch_len,'train',basepath='./cifar-10-batches-py')
+    tf_valid_dataset,tf_valid_dataset_labels = make_batch(batch_len,'validation',basepath='./cifar-10-batches-py')
+    tf_test_dataset,tf_test_dataset_labels = make_batch(batch_len,'test',basepath='./cifar-10-batches-py')
+    # The op for initializing the variables.
     
+
+
+
     global_step=tf.Variable(0)
     init_learning_rate=tf.placeholder(tf.float32)
-    tf_train_dataset = tf.placeholder(tf.float32,shape=(batch_size,image_size,image_size,num_channels))
-    tf_train_labels = tf.placeholder(tf.float32,shape=(batch_size,num_labels))
+    #tf_train_dataset = tf.placeholder(tf.float32,shape=(batch_size,image_size,image_size,num_channels))
+    #tf_train_labels = tf.placeholder(tf.float32,shape=(batch_size,num_labels))
     
-    tf_valid_dataset = tf.constant(valid_dataset)
-    tf_test_dataset = tf.constant(test_dataset)
+    #tf_valid_dataset = tf.constant(valid_dataset)
+    #tf_test_dataset = tf.constant(test_dataset)
     
     hidden_1_weights = tf.Variable(tf.truncated_normal(
         [patch_size[0], patch_size[0], num_channels, depth[0]],
@@ -176,6 +155,10 @@ with graph.as_default() as g:
     ))
     out_bias = tf.Variable(tf.ones([num_labels]))
     
+    init_op = tf.group(tf.global_variables_initializer(),
+                   tf.local_variables_initializer())
+
+
     def define_model(data,training_flg=False):
         keep1=(training_flg * 0.75 + (not training_flg) )#.astype(float)
         #print(keep1)
@@ -223,29 +206,50 @@ with graph.as_default() as g:
     train_prediction = tf.nn.softmax(define_model(tf_train_dataset))
     valid_prediction = tf.nn.softmax(define_model(tf_valid_dataset))
     test_prediction = tf.nn.softmax(define_model(tf_test_dataset)) 
-    
+
+
 
 
 num_steps = 10001
 
-with tf.Session(graph=graph) as session:
-  tf.global_variables_initializer().run()
-  print('Initialized')
-  for step in range(num_steps):
-    offset = (step * batch_size) % (train_labels.shape[0] - batch_size)
-    batch_data = train_dataset[offset:(offset + batch_size), :, :, :]
-    batch_labels = train_labels[offset:(offset + batch_size), :]
-    feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels, init_learning_rate : 5e-2}
-    _, l, predictions= session.run(
-      [optimizer, loss, train_prediction], feed_dict=feed_dict)
-    if (step % 1000 == 0):
-      print('Minibatch loss at step %d: %f' % (step, l))
-      print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
-      print('Validation accuracy: %.1f%%' % accuracy(
-        valid_prediction.eval(), valid_labels))
-      #print(r)
-  print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), test_labels))
+with tf.Session(graph=graph) as sess:
+    
+    sess.run(init_op)
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+    valid_data, valid_labels, test_data, test_labels = sess.run([tf_valid_dataset,tf_valid_dataset_labels,tf_test_dataset,tf_test_dataset_labels])
+    print('Initialized')
+    for step in range(num_steps):
+        
+        batch_data, batch_labels = sess.run([tf_train_dataset,tf_train_labels])
+        
+        feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels, init_learning_rate : 5e-2}
+        _, l, predictions= sess.run(
+            [optimizer, loss, train_prediction], feed_dict=feed_dict)
+        if (step % 1000 == 0):
+            print('Minibatch loss at step %d: %f' % (step, l))
+            print('Minibatch accuracy: %.1f%%' % accuracy(predictions, batch_labels))
+            print('Validation accuracy: %.1f%%' % accuracy(
+                valid_prediction.eval(), valid_labels))
+                #print(r)
+    print('Test accuracy: %.1f%%' % accuracy(test_prediction.eval(), test_labels))
+
+"""
+with tf.Session(graph=graph) as sess:
+    sess.run(init_op)
+    
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(coord=coord)
+
+    final_image,final_lab = sess.run([tf_train_dataset,tf_train_labels])
+    print(len(final_image),final_image.shape,final_lab.shape)
+    print(final_lab)
+    
+    plt.imshow(final_image[10,:,:,::-1])
+    plt.show()
+
+
+"""
 
 
 
-  """
