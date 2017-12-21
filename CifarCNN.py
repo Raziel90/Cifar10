@@ -243,8 +243,9 @@ with graph.as_default() as g:
         loss, optimizer = define_training(train_model, global_step)
 
         scope.reuse_variables()
+        valid_model = define_model(tf_valid_dataset)
         train_prediction = tf.nn.softmax(train_model)
-        valid_prediction = tf.nn.softmax(define_model(tf_valid_dataset))
+        valid_prediction = tf.nn.softmax(valid_model)
         test_prediction = tf.nn.softmax(define_model(tf_test_dataset))
 
     # tr_accuracy=tf.metrics.accuracy(predictions=tf.argmax(train_prediction, 1), labels=tf.argmax(tf_train_labels,1))
@@ -287,9 +288,9 @@ with tf.Session(graph=graph) as sess:
 
         if (step % 100 == 0):
             # summary = sess.run([merged])
-            val_pred += [valid_prediction.eval()]
+            val_pred += [valid_model.eval()]
             if len(val_pred) > 1:
-            	print(np.sum(val_pred[-1] - val_pred[-2]))
+                print(np.sum(val_pred[-1] - val_pred[-2]))
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
             # summary_writer.add_summary(summary, step)
