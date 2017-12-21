@@ -20,6 +20,7 @@ NUM_EPOCHS_PER_DECAY = 350.0
 patch_size = [3, 3, 3, 3, 3]
 depth = [32, 32, 64, 64, 128, 128]
 want_pooling = [True, False, True, False, True]
+want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
 flattening_value = np.prod(
@@ -83,9 +84,13 @@ def define_conv_layer(input_tensor, weights, bias, conv_stride, pool_stride,
         return conv_layer
 
 
-def local_normalization(input_tensor, depth_radius, bias, alpha, want_norm=True):
+def local_normalization(input_tensor,
+                        depth_radius=1.0, bias=1, beta=0.75, alpha=0.001 / 9.0,
+                        want_norm=True):
     if want_norm:
-        return tf.nn.lrn(input_tensor, depth_radius, bias, alpha)
+        return tf.nn.lrn(input_tensor,
+                         depth_radius=depth_radius,
+                         bias=bias, beta=beta, alpha=alpha)
     else:
         return input_tensor
 
@@ -133,7 +138,7 @@ def define_model(data, training_flg=False):
     keep1 = (training_flg * 0.5 + (not training_flg))
 
     dataph = tf.placeholder(data.dtype, data.shape)
-    #dataph.assign
+    # dataph.assign
     with tf.variable_scope('conv1') as scope:
         hidden_1_weights, hidden_1_bias = conv_params(
             patch_size[0], num_channels, depth[0])
@@ -142,6 +147,7 @@ def define_model(data, training_flg=False):
                                     1, pool_strides[0],
                                     want_pooling=want_pooling[0],
                                     keep_prob=keep1)
+        conv_l1 = local_normalization(conv_l1, want_norm=want_norm[0])
         l2_regularize(hidden_1_weights, hidden_1_bias, weight_decay[0])
 
     with tf.variable_scope('conv2') as scope:
@@ -152,6 +158,7 @@ def define_model(data, training_flg=False):
                                     1, pool_strides[1],
                                     want_pooling=want_pooling[1],
                                     keep_prob=keep1)
+        conv_l2 = local_normalization(conv_l2, want_norm=want_norm[1])
         l2_regularize(hidden_2_weights, hidden_2_bias, weight_decay[1])
 
     with tf.variable_scope('conv3') as scope:
@@ -162,6 +169,7 @@ def define_model(data, training_flg=False):
                                     1, pool_strides[2],
                                     want_pooling=want_pooling[2],
                                     keep_prob=keep1)
+        conv_l2 = local_normalization(conv_l2, want_norm=want_norm[2])
         l2_regularize(hidden_3_weights, hidden_3_bias, weight_decay[2])
 
     with tf.variable_scope('conv4') as scope:
@@ -172,6 +180,7 @@ def define_model(data, training_flg=False):
                                     1, pool_strides[3],
                                     want_pooling=want_pooling[3],
                                     keep_prob=keep1)
+        conv_l4 = local_normalization(conv_l4, want_norm=want_norm[3])
         l2_regularize(hidden_4_weights, hidden_4_bias, weight_decay[3])
 
     with tf.variable_scope('conv5') as scope:
@@ -182,6 +191,7 @@ def define_model(data, training_flg=False):
                                     1, pool_strides[4],
                                     want_pooling=want_pooling[4],
                                     keep_prob=keep1)
+        conv_l5 = local_normalization(conv_l5, want_norm=want_norm[4])
         l2_regularize(hidden_5_weights, hidden_5_bias, weight_decay[4])
 
     with tf.variable_scope('out_layer') as scope:
@@ -190,9 +200,13 @@ def define_model(data, training_flg=False):
             conv_l5, [shape[0], shape[1] * shape[2] * shape[3]])
 
         out_weights = tf.Variable(tf.truncated_normal(
-            [-(-image_size // flattening_value) *
-             -(-image_size // flattening_value) *
+
+            [(image_size // flattening_value) *
+             (image_size // flattening_value) *
              depth[4], num_labels], stddev=0.1))
+        # [-(-image_size // flattening_value) *
+        # -(-image_size // flattening_value) *
+        # depth[4], num_labels], stddev=0.1))
         out_bias = tf.Variable(tf.ones([num_labels]))
 
     # print(data.get_shape().as_list())
@@ -259,6 +273,7 @@ with tf.Session(graph=graph) as sess:
     valid_acc = []
     test_acc = []
     loss_in_time = []
+    val_pred = []
     for step in range(num_steps + 1):
 
         batch_data, batch_labels = sess.run(
@@ -272,13 +287,16 @@ with tf.Session(graph=graph) as sess:
 
         if (step % 100 == 0):
             # summary = sess.run([merged])
-
+            val_pred += [valid_prediction.eval()]
+            if len(val_pred) > 1:
+            	print(np.sum(val_pred[-1] - val_pred[-2]))
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
             # summary_writer.add_summary(summary, step)
 
             tr_a = accuracy(predictions, batch_labels)
             val_a = accuracy(valid_prediction.eval(), valid_labels)
+
             tr_acc += tr_a
             valid_acc += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
