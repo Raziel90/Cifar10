@@ -37,8 +37,8 @@ def activation_info(layer):
 
 
 def accuracy(predictions, labels):
-    return (100.0 * np.sum(np.argmax(predictions, 1) == np.argmax(labels, 1))
-            / predictions.shape[0])
+    return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
+            / labels.shape[0])
 
 
 def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
@@ -112,13 +112,13 @@ def get_decay_loss():
 
 def define_training(logits, global_step):
 
+    print(tf_train_labels)
     loss = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=train_model,
             labels=tf_train_labels
         )
     )
-
     reg_loss = loss + get_decay_loss()[0]
     num_batches_per_epoch = examples_per_mode['train'] / batch_len
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
@@ -129,6 +129,7 @@ def define_training(logits, global_step):
     tf.summary.scalar('learning_rate', learning_rate)
     for var in tf.trainable_variables():
         tf.summary.histogram(var.op.name, var)
+
     optimizer = tf.train.AdamOptimizer(
         learning_rate).minimize(reg_loss, global_step=global_step)
 

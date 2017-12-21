@@ -41,10 +41,8 @@ def TFR_parse(example):
                        ), (1, 2, 0)
         ), tf.float32)
     #label = tf.cast(features['labels'],tf.int32)
-    label = tf.cast(
-        tf.one_hot(
-            tf.cast(features['labels'], tf.int32), num_labels),
-        tf.float32)
+    label = tf.cast(features['labels'], tf.int64)
+        
     return image, label
 
 
@@ -54,6 +52,7 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
     print(filename)
     image, label = TFR_parse(serialize(filename))
     tf.image.per_image_standardization(image)
+
     if mode == 'train':
         # so that the shuffeling is good enough
         min_examples = int(examples_per_mode['train'] * 0.4)
@@ -61,13 +60,13 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
         data_batch, label_batch = tf.train.shuffle_batch(
             [image, label], batch_size=batch_size,
             capacity=examples_per_mode['train'],
-            min_after_dequeue=min_examples, num_threads=16)
+            min_after_dequeue=min_examples, num_threads=8)
 
     else:
 
         data_batch, label_batch = tf.train.batch(
-            [image, label], batch_size=examples_per_mode[mode], 
-            capacity=examples_per_mode[mode], num_threads=16)
+            [image, label], batch_size=examples_per_mode[mode],
+            capacity=examples_per_mode[mode], num_threads=8)
     tf.summary.image('images', data_batch)
-
+    print(label_batch)
     return data_batch, label_batch
