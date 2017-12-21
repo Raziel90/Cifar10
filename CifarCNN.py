@@ -244,7 +244,7 @@ with graph.as_default() as g:
     merged = tf.summary.merge_all()
 
 
-num_steps = 100
+num_steps = 10000
 
 with tf.Session(graph=graph) as sess:
 
