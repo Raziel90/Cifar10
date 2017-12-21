@@ -47,7 +47,7 @@ def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
     ), name='weights')
     """
     bias = tf.get_variable("biases", [curr_depth],
-                           initializer=tf.constant_initializer(0.0))
+                           initializer=tf.constant_initializer(0.1))
     # bias = tf.Variable(0.1 * tf.ones([curr_depth]), name='bias')
     return weights, bias
 
@@ -82,8 +82,11 @@ def define_conv_layer(input_tensor, weights, bias, conv_stride, pool_stride,
         return conv_layer
 
 
-def local_normalization(input_tensor, depth_radius, bias, alpha):
-    return tf.nn.lrn(input_tensor, depth_radius, bias, alpha)
+def local_normalization(input_tensor, depth_radius, bias, alpha, want_norm=True):
+	if want_norm:
+    	return tf.nn.lrn(input_tensor, depth_radius, bias, alpha)
+    else:
+    	return input_tensor
 
 
 def l2_regularize(weights, bias, decay):
@@ -250,11 +253,12 @@ with tf.Session(graph=graph) as sess:
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
 
         if (step % 100 == 0):
-            summary = sess.run([merged])
+            # summary = sess.run([merged])
 
-            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
-            run_metadata = tf.RunMetadata()
-            summary_writer.add_summary(summary, step)
+            # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            # run_metadata = tf.RunMetadata()
+            # summary_writer.add_summary(summary, step)
+            
             tr_a = accuracy(predictions, batch_labels)
             val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_acc += tr_a
