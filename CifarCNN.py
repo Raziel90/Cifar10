@@ -22,6 +22,9 @@ depth = [32, 32, 64, 64, 128, 128]
 want_pooling = [True, False, True, False, True]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
+flattening_value = np.prod(
+    np.array(pool_strides)[np.array(want_pooling)]
+).tolist()  # to flatten the convolution output
 
 
 def activation_info(layer):
@@ -39,16 +42,14 @@ def accuracy(predictions, labels):
 def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
     weights = tf.get_variable("weights",
                               [patch_sz, patch_sz, prev_depth, curr_depth],
-                              initializer=tf.random_normal_initializer())
-    """
-    weights = tf.Variable(tf.truncated_normal(
-        [patch_sz, patch_sz, prev_depth, curr_depth],
-        stddev=0.1
-    ), name='weights')
-    """
+                              initializer=tf.random_normal_initializer(),
+                              # collections=[tf.GraphKeys.WEIGHTS]
+                              )
+
     bias = tf.get_variable("biases", [curr_depth],
-                           initializer=tf.constant_initializer(0.1))
-    # bias = tf.Variable(0.1 * tf.ones([curr_depth]), name='bias')
+                           initializer=tf.constant_initializer(0.1),
+                           # collections=[tf.GraphKeys.BIASES]
+                           )
     return weights, bias
 
 
@@ -90,25 +91,56 @@ def local_normalization(input_tensor, depth_radius, bias, alpha, want_norm=True)
 
 
 def l2_regularize(weights, bias, decay):
-    loss_weight = decay * tf.nn.l2_loss(weights)
-    loss_bias = decay * tf.nn.l2_loss(bias)
+    loss_weight = decay * tf.nn.l2_loss(weights, name='bias_weight')
+    loss_bias = decay * tf.nn.l2_loss(bias, name='bias_loss')
     tf.add_to_collection('losses_w', loss_weight)
     tf.add_to_collection('losses_b', loss_bias)
 
 
 def get_decay_loss():
-    return (tf.add_n(tf.get_collection('losses_w'), name='total_loss_w'), tf.add_n(tf.get_collection('losses_b'), name='total_loss_b'))
+    return (
+        tf.add_n(tf.get_collection('losses_w'), name='total_loss_w'),
+        tf.add_n(tf.get_collection('losses_b'), name='total_loss_b')
+    )
+
+
+def define_training(logits, global_step):
+
+    loss = tf.reduce_mean(
+        tf.nn.softmax_cross_entropy_with_logits(
+            logits=train_model,
+            labels=tf_train_labels
+        )
+    )
+
+    reg_loss = loss + get_decay_loss()[0]
+    num_batches_per_epoch = examples_per_mode['train'] / batch_len
+    decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
+    learning_rate = tf.train.exponential_decay(
+        learning_rate=init_learning_rate, global_step=global_step,
+        decay_steps=decay_steps, decay_rate=LEARNING_RATE_DECAY_FACTOR,
+        staircase=True)
+    tf.summary.scalar('learning_rate', learning_rate)
+    for var in tf.trainable_variables():
+        tf.summary.histogram(var.op.name, var)
+    optimizer = tf.train.AdamOptimizer(
+        learning_rate).minimize(reg_loss, global_step=global_step)
+
+    return reg_loss, optimizer
 
 
 def define_model(data, training_flg=False):
     keep1 = (training_flg * 0.5 + (not training_flg))
 
+    dataph = tf.placeholder(data.dtype, data.shape)
+    #dataph.assign
     with tf.variable_scope('conv1') as scope:
         hidden_1_weights, hidden_1_bias = conv_params(
             patch_size[0], num_channels, depth[0])
         conv_l1 = define_conv_layer(data,
                                     hidden_1_weights, hidden_1_bias,
-                                    1, pool_strides[0], want_pooling=want_pooling[0],
+                                    1, pool_strides[0],
+                                    want_pooling=want_pooling[0],
                                     keep_prob=keep1)
         l2_regularize(hidden_1_weights, hidden_1_bias, weight_decay[0])
 
@@ -117,23 +149,28 @@ def define_model(data, training_flg=False):
             patch_size[1], depth[0], depth[1])
         conv_l2 = define_conv_layer(conv_l1,
                                     hidden_2_weights, hidden_2_bias,
-                                    1, pool_strides[1], want_pooling=want_pooling[1],
+                                    1, pool_strides[1],
+                                    want_pooling=want_pooling[1],
                                     keep_prob=keep1)
         l2_regularize(hidden_2_weights, hidden_2_bias, weight_decay[1])
+
     with tf.variable_scope('conv3') as scope:
         hidden_3_weights, hidden_3_bias = conv_params(
             patch_size[2], depth[1], depth[2])
         conv_l3 = define_conv_layer(conv_l2,
                                     hidden_3_weights, hidden_3_bias,
-                                    1, pool_strides[2], want_pooling=want_pooling[2],
+                                    1, pool_strides[2],
+                                    want_pooling=want_pooling[2],
                                     keep_prob=keep1)
         l2_regularize(hidden_3_weights, hidden_3_bias, weight_decay[2])
+
     with tf.variable_scope('conv4') as scope:
         hidden_4_weights, hidden_4_bias = conv_params(
             patch_size[3], depth[2], depth[3])
         conv_l4 = define_conv_layer(conv_l3,
                                     hidden_4_weights, hidden_4_bias,
-                                    1, pool_strides[3], want_pooling=want_pooling[3],
+                                    1, pool_strides[3],
+                                    want_pooling=want_pooling[3],
                                     keep_prob=keep1)
         l2_regularize(hidden_4_weights, hidden_4_bias, weight_decay[3])
 
@@ -142,14 +179,11 @@ def define_model(data, training_flg=False):
             patch_size[4], depth[3], depth[4])
         conv_l5 = define_conv_layer(conv_l4,
                                     hidden_5_weights, hidden_5_bias,
-                                    1, pool_strides[4], want_pooling=want_pooling[4],
+                                    1, pool_strides[4],
+                                    want_pooling=want_pooling[4],
                                     keep_prob=keep1)
         l2_regularize(hidden_5_weights, hidden_5_bias, weight_decay[4])
 
-    # flattening_value = np.prod(pool_strides)
-    flattening_value = np.prod(
-        np.array(pool_strides)[np.array(want_pooling)]
-    ).tolist()
     with tf.variable_scope('out_layer') as scope:
         shape = conv_l5.get_shape().as_list()
         reshaped = tf.reshape(
@@ -190,28 +224,12 @@ with graph.as_default() as g:
 
     # tf_valid_dataset = tf.constant(valid_dataset)
     # tf_test_dataset = tf.constant(test_dataset)
-    with tf.variable_scope('Def_operations') as scope:
+    with tf.variable_scope('training') as scope:
         train_model = define_model(tf_train_dataset, training_flg=True)
+        loss, optimizer = define_training(train_model, global_step)
 
-        loss = tf.reduce_mean(
-            tf.nn.softmax_cross_entropy_with_logits(
-                logits=train_model,
-                labels=tf_train_labels
-            )
-        )
-
-        reg_loss = loss + get_decay_loss()[0]
-        num_batches_per_epoch = examples_per_mode['train'] / batch_len
-        decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
-        learning_rate = tf.train.exponential_decay(
-            learning_rate=init_learning_rate, global_step=global_step,
-            decay_steps=decay_steps, decay_rate=LEARNING_RATE_DECAY_FACTOR,
-            staircase=True)
-
-        optimizer = tf.train.AdamOptimizer(
-            learning_rate).minimize(reg_loss, global_step=global_step)
         scope.reuse_variables()
-        train_prediction = tf.nn.softmax(define_model(tf_train_dataset))
+        train_prediction = tf.nn.softmax(train_model)
         valid_prediction = tf.nn.softmax(define_model(tf_valid_dataset))
         test_prediction = tf.nn.softmax(define_model(tf_test_dataset))
 
@@ -226,7 +244,7 @@ with graph.as_default() as g:
     merged = tf.summary.merge_all()
 
 
-num_steps = 1001
+num_steps = 100
 
 with tf.Session(graph=graph) as sess:
 
@@ -241,7 +259,7 @@ with tf.Session(graph=graph) as sess:
     valid_acc = []
     test_acc = []
     loss_in_time = []
-    for step in range(num_steps):
+    for step in range(num_steps + 1):
 
         batch_data, batch_labels = sess.run(
             [tf_train_dataset, tf_train_labels])
@@ -270,6 +288,8 @@ with tf.Session(graph=graph) as sess:
     print('Test accuracy: %.1f%%' % test_acc)
     coord.request_stop()
     coord.join(threads)
+    plt.plot(np.array(tr_acc))
+
 
 """
 with tf.Session(graph=graph) as sess:
