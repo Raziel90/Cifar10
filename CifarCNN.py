@@ -23,6 +23,7 @@ want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
+keep_prob = np.array([0.8, 0.7, 0.7, 0.5, 0.5])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
@@ -135,9 +136,9 @@ def define_training(logits, global_step):
 
 
 def define_model(data, training_flg=False):
-    keep1 = (training_flg * 0.5 + (not training_flg))
+    keep1 = (training_flg * keep_prob + (not training_flg)).tolist()
 
-    dataph = tf.placeholder(data.dtype, data.shape)
+    # dataph = tf.placeholder(data.dtype, data.shape)
     # dataph.assign
     with tf.variable_scope('conv1') as scope:
         hidden_1_weights, hidden_1_bias = conv_params(
@@ -146,7 +147,7 @@ def define_model(data, training_flg=False):
                                     hidden_1_weights, hidden_1_bias,
                                     1, pool_strides[0],
                                     want_pooling=want_pooling[0],
-                                    keep_prob=keep1)
+                                    keep_prob=keep1[0])
         conv_l1 = local_normalization(conv_l1, want_norm=want_norm[0])
         l2_regularize(hidden_1_weights, hidden_1_bias, weight_decay[0])
 
@@ -157,7 +158,7 @@ def define_model(data, training_flg=False):
                                     hidden_2_weights, hidden_2_bias,
                                     1, pool_strides[1],
                                     want_pooling=want_pooling[1],
-                                    keep_prob=keep1)
+                                    keep_prob=keep1[1])
         conv_l2 = local_normalization(conv_l2, want_norm=want_norm[1])
         l2_regularize(hidden_2_weights, hidden_2_bias, weight_decay[1])
 
@@ -168,7 +169,7 @@ def define_model(data, training_flg=False):
                                     hidden_3_weights, hidden_3_bias,
                                     1, pool_strides[2],
                                     want_pooling=want_pooling[2],
-                                    keep_prob=keep1)
+                                    keep_prob=keep1[2])
         conv_l2 = local_normalization(conv_l2, want_norm=want_norm[2])
         l2_regularize(hidden_3_weights, hidden_3_bias, weight_decay[2])
 
@@ -179,7 +180,7 @@ def define_model(data, training_flg=False):
                                     hidden_4_weights, hidden_4_bias,
                                     1, pool_strides[3],
                                     want_pooling=want_pooling[3],
-                                    keep_prob=keep1)
+                                    keep_prob=keep1[3])
         conv_l4 = local_normalization(conv_l4, want_norm=want_norm[3])
         l2_regularize(hidden_4_weights, hidden_4_bias, weight_decay[3])
 
@@ -190,7 +191,7 @@ def define_model(data, training_flg=False):
                                     hidden_5_weights, hidden_5_bias,
                                     1, pool_strides[4],
                                     want_pooling=want_pooling[4],
-                                    keep_prob=keep1)
+                                    keep_prob=keep1[4])
         conv_l5 = local_normalization(conv_l5, want_norm=want_norm[4])
         l2_regularize(hidden_5_weights, hidden_5_bias, weight_decay[4])
 
