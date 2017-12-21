@@ -12,8 +12,8 @@ num_labels = 10
 num_channels = 3  # RGB
 batch_len = 100
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 0.1  # 5e-2
-LEARNING_RATE_DECAY_FACTOR = 0.001
+INIT_L_RATE = 0.001  # 5e-2
+LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 
 # Definition of the Architecture
