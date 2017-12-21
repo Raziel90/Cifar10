@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 100
+batch_len = 50
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
 INIT_L_RATE = 0.005  # 5e-2
 LEARNING_RATE_DECAY_FACTOR = 0.1
