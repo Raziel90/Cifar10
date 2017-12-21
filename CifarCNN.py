@@ -285,12 +285,12 @@ with tf.Session(graph=graph) as sess:
                      init_learning_rate: INIT_L_RATE}
         _, l, predictions = sess.run(
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
-
+        val_pred += [valid_model.eval()]
+        if len(val_pred) > 1:
+            print(np.sum(val_pred[-1] - val_pred[-2]))
         if (step % 100 == 0):
             # summary = sess.run([merged])
-            val_pred += [valid_model.eval()]
-            if len(val_pred) > 1:
-                print(np.sum(val_pred[-1] - val_pred[-2]))
+
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
             # summary_writer.add_summary(summary, step)
