@@ -248,12 +248,13 @@ with tf.Session(graph=graph) as sess:
                      init_learning_rate: INIT_L_RATE}
         _, l, predictions = sess.run(
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
-        # summary = sess.run([merged])
-        # summary_writer.add_summary(summary, step)
 
         if (step % 100 == 0):
-            # summary = sess.run([merged])
-            # summary_writer.add_summary(summary, step)
+            summary = sess.run([merged])
+
+            run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+            run_metadata = tf.RunMetadata()
+            summary_writer.add_summary(summary, step)
             tr_a = accuracy(predictions, batch_labels)
             val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_acc += tr_a
