@@ -285,9 +285,9 @@ with tf.Session(graph=graph) as sess:
                      init_learning_rate: INIT_L_RATE}
         _, l, predictions = sess.run(
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
-        val_pred += [valid_model.eval()]
-        if len(val_pred) > 1:
-            print(np.sum(val_pred[-1] - val_pred[-2]))
+        # val_pred += [valid_model.eval()]
+        # if len(val_pred) > 1:
+        #    print(np.sum(val_pred[-1] - val_pred[-2]))
         if (step % 100 == 0):
             # summary = sess.run([merged])
 
