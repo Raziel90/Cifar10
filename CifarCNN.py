@@ -76,7 +76,7 @@ def define_max_pool(x, k=2):
 
 def define_conv_layer(input_tensor, weights, bias, conv_stride, pool_stride,
                       want_pooling=True, keep_prob=1.0):
-    print(conv_stride,pool_stride)
+
     conv_layer = define_conv(input_tensor, weights,
                              bias, conv_stride, keep_prob)
     if want_pooling:
