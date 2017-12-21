@@ -17,7 +17,7 @@ LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 
 # Definition of the Architecture
-patch_size = [3, 3, 3, 3, 3]
+patch_size = [5, 3, 5, 3, 3]
 depth = [32, 32, 64, 64, 128, 128]
 want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
