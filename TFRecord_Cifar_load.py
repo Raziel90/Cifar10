@@ -39,7 +39,7 @@ def TFR_parse(example):
         tf.transpose(
             tf.reshape(image, (num_channels, image_size, image_size)
                        ), (1, 2, 0)
-        ), tf.float32)/255
+        ), tf.float32)
     #label = tf.cast(features['labels'],tf.int32)
     label = tf.cast(
         tf.one_hot(
@@ -53,28 +53,21 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
     filename = get_files(basepath, mode)
     print(filename)
     image, label = TFR_parse(serialize(filename))
-    #dataset = tf.contrib.data.TFRecordDataset(filename).repeat()
-
-    #dataset = dataset.map(TFR_parse, num_threads=batch_size, output_buffer_size = 2 * batch_size)
-
+    tf.image.per_image_standardization(image)
     if mode == 'train':
         # so that the shuffeling is good enough
         min_examples = int(examples_per_mode['train'] * 0.4)
 
         data_batch, label_batch = tf.train.shuffle_batch(
-            [image, label], batch_size=batch_size, capacity=examples_per_mode['train'], min_after_dequeue=min_examples)
+            [image, label], batch_size=batch_size,
+            capacity=examples_per_mode['train'],
+            min_after_dequeue=min_examples, num_threads=16)
 
     else:
-        # so that the shuffeling is good enough
-        min_examples = int(examples_per_mode[mode] * 0.4)
 
-        data_batch, label_batch = tf.train.batch([image, label], batch_size=examples_per_mode[
-                                                 mode], capacity=examples_per_mode[mode],)
-        #dataset = dataset.shuffe(buffer_size=min_queue_examples + 3 * batch_size)
-
-    # finally create the batches
-    #dataset = dataset.batch(batch_size)
-    #iterator = dataset.make_one_shot_iterator()
-    #data_batch, label_batch = iterator.get_next()
+        data_batch, label_batch = tf.train.batch(
+            [image, label], batch_size=examples_per_mode[mode], 
+            capacity=examples_per_mode[mode], num_threads=16)
+    tf.summary.image('images', data_batch)
 
     return data_batch, label_batch
