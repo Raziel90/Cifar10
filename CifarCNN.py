@@ -83,10 +83,10 @@ def define_conv_layer(input_tensor, weights, bias, conv_stride, pool_stride,
 
 
 def local_normalization(input_tensor, depth_radius, bias, alpha, want_norm=True):
-	if want_norm:
-    	return tf.nn.lrn(input_tensor, depth_radius, bias, alpha)
+    if want_norm:
+        return tf.nn.lrn(input_tensor, depth_radius, bias, alpha)
     else:
-    	return input_tensor
+        return input_tensor
 
 
 def l2_regularize(weights, bias, decay):
@@ -258,7 +258,7 @@ with tf.Session(graph=graph) as sess:
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
             # summary_writer.add_summary(summary, step)
-            
+
             tr_a = accuracy(predictions, batch_labels)
             val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_acc += tr_a
