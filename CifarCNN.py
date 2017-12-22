@@ -41,6 +41,8 @@ def accuracy(predictions, labels):
     return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
         / labels.shape[0])
     """
+    # return (100.0 * tf.reduce_mean(tf.argmax(predictions, 1) == labels))
+    
     return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
 
 
@@ -296,8 +298,8 @@ with tf.Session(graph=graph) as sess:
             tr_acc += tr_a[0]
             valid_acc += val_a[0]
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy: %.1f%%' % tr_a[0])
-            print('Validation accuracy: %.1f%%' % val_a[0])
+            print('Minibatch accuracy: %.1f%%' % 100 * tr_a[0])
+            print('Validation accuracy: %.1f%%' % 100 * val_a[0])
     test_acc = accuracy(test_prediction.eval(), test_labels)
     print('Test accuracy: %.1f%%' % sess.run([test_accuracy])[0])
     coord.request_stop()
