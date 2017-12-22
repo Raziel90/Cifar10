@@ -12,7 +12,7 @@ num_labels = 10
 num_channels = 3  # RGB
 batch_len = 150
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 5e-4
+INIT_L_RATE = 5e-1
 LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 num_steps = 10000
@@ -56,12 +56,13 @@ def accuracy(predictions, labels):
 def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
     weights = tf.get_variable("weights",
                               [patch_sz, patch_sz, prev_depth, curr_depth],
-                              initializer=tf.random_normal_initializer(),
+                              initializer=tf.random_normal_initializer(
+                                  stddev=0.1)
                               # collections=[tf.GraphKeys.WEIGHTS]
                               )
 
     bias = tf.get_variable("biases", [curr_depth],
-                           initializer=tf.constant_initializer(0.1),
+                           initializer=tf.constant_initializer(0.1)
                            # collections=[tf.GraphKeys.BIASES]
                            )
     return weights, bias
@@ -292,8 +293,8 @@ with tf.Session(graph=graph) as sess:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
         if (step % 1000 == 0):
             # summary = sess.run([merged])
-            for var in tf.trainable_variables():
-                print(np.sum(np.array(var.eval())))
+            # for var in tf.trainable_variables():
+            #    print(np.sum(np.array(var.eval())))
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
