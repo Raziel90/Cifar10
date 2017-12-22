@@ -117,8 +117,7 @@ def get_decay_loss():
 
 def define_training(logits, labels, global_step):
 
-    print(logits, labels)
-    print('')
+    
     loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=logits,
@@ -298,8 +297,8 @@ with tf.Session(graph=graph) as sess:
             tr_acc += tr_a[0]
             valid_acc += val_a[0]
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy: %.1f%%' % 100 * tr_a[0])
-            print('Validation accuracy: %.1f%%' % 100 * val_a[0])
+            print('Minibatch accuracy: %.1f%%' % 100.0 * tr_a[0])
+            print('Validation accuracy: %.1f%%' % 100.0 * val_a[0])
     test_acc = accuracy(test_prediction.eval(), test_labels)
     print('Test accuracy: %.1f%%' % sess.run([test_accuracy])[0])
     coord.request_stop()
