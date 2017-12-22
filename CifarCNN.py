@@ -119,7 +119,7 @@ def define_training(logits, global_step):
             labels=tf_train_labels
         )
     )
-    reg_loss = loss + get_decay_loss()[0]
+    reg_loss = loss #+ get_decay_loss()[0]
     num_batches_per_epoch = examples_per_mode['train'] / batch_len
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
     learning_rate = tf.train.exponential_decay(
@@ -171,51 +171,6 @@ def define_model(data, training_flg=False):
             l2_regularize(hidden_weights[layer], hidden_bias[
                 layer], weight_decay[layer])
 
-    """
-    with tf.variable_scope('conv2') as scope:
-        hidden_2_weights, hidden_2_bias = conv_params(
-            patch_size[1], depth[0], depth[1])
-        conv_l2 = define_conv_layer(conv_l1,
-                                    hidden_2_weights, hidden_2_bias,
-                                    1, pool_strides[1],
-                                    want_pooling=want_pooling[1],
-                                    keep_prob=keep1[1])
-        conv_l2 = local_normalization(conv_l2, want_norm=want_norm[1])
-        l2_regularize(hidden_2_weights, hidden_2_bias, weight_decay[1])
-
-    with tf.variable_scope('conv3') as scope:
-        hidden_3_weights, hidden_3_bias = conv_params(
-            patch_size[2], depth[1], depth[2])
-        conv_l3 = define_conv_layer(conv_l2,
-                                    hidden_3_weights, hidden_3_bias,
-                                    1, pool_strides[2],
-                                    want_pooling=want_pooling[2],
-                                    keep_prob=keep1[2])
-        conv_l2 = local_normalization(conv_l2, want_norm=want_norm[2])
-        l2_regularize(hidden_3_weights, hidden_3_bias, weight_decay[2])
-
-    with tf.variable_scope('conv4') as scope:
-        hidden_4_weights, hidden_4_bias = conv_params(
-            patch_size[3], depth[2], depth[3])
-        conv_l4 = define_conv_layer(conv_l3,
-                                    hidden_4_weights, hidden_4_bias,
-                                    1, pool_strides[3],
-                                    want_pooling=want_pooling[3],
-                                    keep_prob=keep1[3])
-        conv_l4 = local_normalization(conv_l4, want_norm=want_norm[3])
-        l2_regularize(hidden_4_weights, hidden_4_bias, weight_decay[3])
-	
-    with tf.variable_scope('conv5') as scope:
-        hidden_5_weights, hidden_5_bias = conv_params(
-            patch_size[4], depth[3], depth[4])
-        conv_l5 = define_conv_layer(conv_l4,
-                                    hidden_5_weights, hidden_5_bias,
-                                    1, pool_strides[4],
-                                    want_pooling=want_pooling[4],
-                                    keep_prob=keep1[4])
-        conv_l5 = local_normalization(conv_l5, want_norm=want_norm[4])
-        l2_regularize(hidden_5_weights, hidden_5_bias, weight_decay[4])
-	"""
     with tf.variable_scope('out_layer') as scope:
         shape = conv_l[-1].get_shape().as_list()
         reshaped = tf.reshape(
@@ -226,17 +181,8 @@ def define_model(data, training_flg=False):
             [(image_size // flattening_value) *
              (image_size // flattening_value) *
              depth[4], num_labels], stddev=0.1))
-        # [-(-image_size // flattening_value) *
-        # -(-image_size // flattening_value) *
-        # depth[4], num_labels], stddev=0.1))
         out_bias = tf.Variable(tf.ones([num_labels]))
 
-    # print(data.get_shape().as_list())
-    # print(shape)
-    # print(reshaped.get_shape().as_list())
-    # full_layer = tf.nn.relu(tf.nn.bias_add(tf.matmul(reshaped, hidden_5_weights), hidden_5_bias))
-    # print(reshaped.get_shape().as_list(),
-    # out_weights.get_shape().as_list())
     return tf.nn.bias_add(tf.matmul(reshaped, out_weights), out_bias)
 
 
