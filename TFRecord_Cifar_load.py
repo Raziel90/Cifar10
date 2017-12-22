@@ -52,7 +52,7 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
     print(filename)
     image, label = TFR_parse(serialize(filename))
     tf.image.per_image_standardization(image)
-
+    
     if mode == 'train':
         # so that the shuffeling is good enough
         min_examples = int(examples_per_mode['train'] * 0.4)
@@ -68,5 +68,5 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
             [image, label], batch_size=examples_per_mode[mode],
             capacity=examples_per_mode[mode], num_threads=8)
     tf.summary.image('images', data_batch)
-    print(label_batch)
+    #print(label_batch)
     return data_batch, label_batch
