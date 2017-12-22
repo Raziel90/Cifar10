@@ -295,6 +295,7 @@ with tf.Session(graph=graph) as sess:
             # val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_a, val_a = sess.run([train_accuracy, valid_accuracy])
             tr_acc += tr_a[0]
+            print(type(tr_a[0]))
             valid_acc += val_a[0]
             print('Minibatch loss at step %d: %f' % (step, l))
             print('Minibatch accuracy: %.1f%%' % 100.0 * tr_a[0])
