@@ -12,7 +12,7 @@ num_labels = 10
 num_channels = 3  # RGB
 batch_len = 50
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 0.005  # 5e-2
+INIT_L_RATE = 0.05  # 5e-2
 LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 
@@ -289,7 +289,7 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 100 == 0):
+        if (step % 1000 == 0):
             # summary = sess.run([merged])
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
