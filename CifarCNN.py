@@ -37,8 +37,11 @@ def activation_info(layer):
 
 
 def accuracy(predictions, labels):
-	print(predictions.get_shape())
-	return (100.0 * tf.reduce_mean(tf.cast(tf.argmax(predictions, 1) == labels,tf.float32)))
+    """
+    return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
+        / labels.shape[0])
+    """
+    return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
 
 
 def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
@@ -227,13 +230,13 @@ with graph.as_default() as g:
         scope.reuse_variables()
 
         train_prediction = tf.nn.softmax(train_model)
-        valid_prediction = tf.nn.softmax(define_model(tf_train_dataset_bat))
-        test_prediction = tf.nn.softmax(define_model(tf_train_dataset_bat))
+        valid_prediction = tf.nn.softmax(define_model(tf_valid_dataset_bat))
+        test_prediction = tf.nn.softmax(define_model(tf_test_dataset_bat))
 
         train_accuracy = accuracy(train_prediction, tf_train_labels_bat)
         valid_accuracy = accuracy(
             valid_prediction, tf_valid_dataset_labels_bat)
-        test_accuracy = accuracy(train_prediction, tf_test_dataset_labels_bat)
+        test_accuracy = accuracy(test_prediction, tf_test_dataset_labels_bat)
     # tr_accuracy=tf.metrics.accuracy(predictions=tf.argmax(train_prediction, 1), labels=tf.argmax(tf_train_labels,1))
     # valid_accuracy=tf.metrics.accuracy(predictions=tf.argmax(valid_prediction, 1),labels=tf.argmax(tf_valid_dataset_labels,1))
     # test_accuracy=tf.metrics.accuracy(predictions=tf.argmax(test_prediction,
@@ -264,7 +267,7 @@ with tf.Session(graph=graph) as sess:
     test_acc = []
     loss_in_time = []
     val_pred = []
-    #print(valid_data[0].dtype, np.array(valid_data).shape)
+    # print(valid_data[0].dtype, np.array(valid_data).shape)
     for step in range(num_steps + 1):
 
         # batch_data, batch_labels = sess.run(
@@ -287,8 +290,8 @@ with tf.Session(graph=graph) as sess:
             # run_metadata = tf.RunMetadata()
             # summary_writer.add_summary(summary, step)
 
-            #tr_a = accuracy(predictions, batch_labels)
-            #val_a = accuracy(valid_prediction.eval(), valid_labels)
+            # tr_a = accuracy(predictions, batch_labels)
+            # val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_a, val_a = sess.run([train_accuracy, valid_accuracy])
             tr_acc += tr_a
             valid_acc += val_a
