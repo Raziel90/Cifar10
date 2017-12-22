@@ -3,7 +3,7 @@
 import tensorflow as tf
 from CifarCNN import define_training, define_model, accuracy
 from TFRecord_Cifar_load import make_batch
-from matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 num_steps = 10000
 batch_len = 150
 INIT_L_RATE = 1e-4
