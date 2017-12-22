@@ -24,7 +24,7 @@ want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
-keep_prob = np.ones(shape=(5, 1))  # np.array([0.9, 0.9, 0.9, 0.9, 0.9])
+keep_prob =  np.array([1, 1, 1, 1, 1])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
