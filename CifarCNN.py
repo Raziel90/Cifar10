@@ -302,8 +302,8 @@ with tf.Session(graph=graph) as sess:
             tr_acc += tr_a
             valid_acc += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy: %.1f%%' % 100.0 * tr_a)
-            print('Validation accuracy: %.1f%%' % 100.0 * val_a)
+            print('Minibatch accuracy: %.1f%%' %  tr_a)
+            print('Validation accuracy: %.1f%%' % val_a)
     test_acc = accuracy(test_prediction.eval(), test_labels)
     print('Test accuracy: %.1f%%' % sess.run([test_accuracy]))
     coord.request_stop()
