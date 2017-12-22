@@ -12,13 +12,13 @@ num_labels = 10
 num_channels = 3  # RGB
 batch_len = 150
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 5e-1
+INIT_L_RATE = 1e-4
 LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 num_steps = 10000
 
 # Definition of the Architecture
-patch_size = [5, 3, 5, 3, 3]
+patch_size = [3, 3, 3, 3, 3]
 depth = [32, 32, 64, 64, 128, 128]
 want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
