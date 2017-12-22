@@ -41,9 +41,14 @@ def accuracy(predictions, labels):
     return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
         / labels.shape[0])
     """
-    
-    return (100.0 * tf.reduce_mean(tf.equal(tf.argmax(predictions, 1), labels)))
-    
+
+    return (100.0 * tf.reduce_mean(
+        tf.cast(
+            tf.equal(
+                tf.argmax(predictions, 1),
+                labels),
+            tf.float32)))
+
     # return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
 
 
@@ -118,7 +123,6 @@ def get_decay_loss():
 
 def define_training(logits, labels, global_step):
 
-    
     loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits=logits,
