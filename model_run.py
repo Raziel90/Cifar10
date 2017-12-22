@@ -4,8 +4,8 @@ import numpy as np
 import tensorflow as tf
 from CifarCNN import define_training, define_model, accuracy
 from TFRecord_Cifar_load import make_batch
-import matplotlib
-matplotlib.use('GTKAgg')
+#import matplotlib
+#matplotlib.use('GTKAgg')
 import matplotlib.pyplot as plt
 num_steps = 10000
 batch_len = 150
@@ -95,7 +95,7 @@ with tf.Session(graph=graph) as sess:
             print('Minibatch accuracy: %.1f%%' % tr_a)
             print('Validation accuracy: %.1f%%' % val_a)
             plt.plot(x=range(step), y=np.array(tr_acc))
-            show(block=False)
+            plt.show(block=False)
     # accuracy(test_prediction.eval(), test_labels)
     test_acc = sess.run([test_accuracy])
     print(test_acc)
