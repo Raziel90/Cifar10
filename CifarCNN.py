@@ -290,8 +290,10 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 100 == 0):
+        if (step % 1000 == 0):
             # summary = sess.run([merged])
+            for var in tf.trainable_variables():
+                print(np.sum(np.array(var.eval())))
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
