@@ -290,8 +290,10 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 100 == 0):
+        if (step % 1000 == 0):
             # summary = sess.run([merged])
+            for var in tf.trainable_variables():
+                print(np.sum(np.array(var.eval())))
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
@@ -307,7 +309,8 @@ with tf.Session(graph=graph) as sess:
             print('Validation accuracy: %.1f%%' % val_a)
     # accuracy(test_prediction.eval(), test_labels)
     test_acc = sess.run([test_accuracy])
-    print('Test accuracy: %.1f%%' % test_acc)
+    print(test_acc)
+    #print('Test accuracy: %.1f%%' % test_acc)
     coord.request_stop()
     coord.join(threads)
     plt.plot(np.array(tr_acc))
