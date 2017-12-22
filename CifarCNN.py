@@ -4,18 +4,18 @@ import numpy as np
 import tensorflow as tf
 
 # import pickle
-from TFRecord_Cifar_load import make_batch
-import matplotlib.pyplot as plt
+#from TFRecord_Cifar_load import make_batch
+#import matplotlib.pyplot as plt
 
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 150
+batch_len = 200
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
 INIT_L_RATE = 1e-4
 LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
-num_steps = 10000
+#num_steps = 10000
 
 # Definition of the Architecture
 patch_size = [3, 3, 3, 3, 3]
@@ -24,7 +24,7 @@ want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
-keep_prob =  np.array([1, 1, 1, 1, 1])
+keep_prob = np.array([0.9, 0.9, 0.9, 0.9, 0.9])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
@@ -201,7 +201,7 @@ def define_model(data, training_flg=False):
 
     return tf.nn.bias_add(tf.matmul(reshaped, out_weights), out_bias, name='FULL-MODEL-Logits')
 
-
+"""
 graph = tf.Graph()
 with graph.as_default() as g:
 
@@ -216,19 +216,6 @@ with graph.as_default() as g:
 
     global_step = tf.Variable(0, trainable=False)
     init_learning_rate = tf.placeholder(tf.float32, name='learning_rate')
-    """
-    tf_train_data = tf.placeholder(tf.float32, shape=(
-        batch_len, image_size, image_size, num_channels), name='Train_data')
-    tf_train_labels = tf.placeholder(tf.int64, shape=(
-        batch_len), name='train_labels')
-
-    tf_valid_dataset = tf.placeholder(tf.float32, shape=(
-        examples_per_mode['validation'], image_size, image_size, num_channels),
-        name='Valid_data')
-    tf_test_dataset = tf.placeholder(tf.float32, shape=(
-        examples_per_mode['test'], image_size, image_size, num_channels),
-        name='Test_data')
-	"""
 
     with tf.variable_scope('training') as scope:
         train_model = define_model(tf_train_dataset_bat, training_flg=True)
@@ -255,13 +242,7 @@ with graph.as_default() as g:
 
     merged = tf.summary.merge_all()
 
-"""
-valid_data, valid_labels, test_data, test_labels = sess.run(
-    [tf_valid_dataset_bat,
-     tf_valid_dataset_labels_bat,
-     tf_test_dataset_bat,
-     tf_test_dataset_labels_bat])
-"""
+
 
 with tf.Session(graph=graph) as sess:
 
@@ -317,7 +298,6 @@ with tf.Session(graph=graph) as sess:
     plt.plot(np.array(tr_acc))
 
 
-"""
 with tf.Session(graph=graph) as sess:
     sess.run(init_op)
 
