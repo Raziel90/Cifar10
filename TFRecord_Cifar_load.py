@@ -51,7 +51,7 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
     filename = get_files(basepath, mode)
     print(filename)
     image, label = TFR_parse(serialize(filename))
-    tf.image.per_image_standardization(image)
+    image = tf.image.per_image_standardization(image)
 
     if mode == 'train':
         # so that the shuffeling is good enough

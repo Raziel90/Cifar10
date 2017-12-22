@@ -261,7 +261,7 @@ valid_data, valid_labels, test_data, test_labels = sess.run(
      tf_test_dataset_bat,
      tf_test_dataset_labels_bat])
 """
-"""
+
 with tf.Session(graph=graph) as sess:
 
     sess.run(init_op)
@@ -314,9 +314,9 @@ with tf.Session(graph=graph) as sess:
     coord.request_stop()
     coord.join(threads)
     plt.plot(np.array(tr_acc))
+
+
 """
-
-
 with tf.Session(graph=graph) as sess:
     sess.run(init_op)
 
@@ -332,3 +332,4 @@ with tf.Session(graph=graph) as sess:
     plt.show()
     coord.request_stop()
     coord.join(threads)
+"""
