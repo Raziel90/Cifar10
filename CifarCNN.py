@@ -24,7 +24,7 @@ want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
-keep_prob = np.array([0.9, 0.9, 0.9, 0.9, 0.9])
+keep_prob = np.ones(shape=(5, 1))  # np.array([0.9, 0.9, 0.9, 0.9, 0.9])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
@@ -214,7 +214,7 @@ with graph.as_default() as g:
         batch_len, 'test', basepath='./cifar-10-batches-py')
     # The op for initializing the variables.
 
-    global_step = tf.Variable(0)
+    global_step = tf.Variable(0, trainable=False)
     init_learning_rate = tf.placeholder(tf.float32, name='learning_rate')
     """
     tf_train_data = tf.placeholder(tf.float32, shape=(
@@ -291,7 +291,7 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 1000 == 0):
+        if (step % 500 == 0):
             # summary = sess.run([merged])
             # for var in tf.trainable_variables():
             #    print(np.sum(np.array(var.eval())))
