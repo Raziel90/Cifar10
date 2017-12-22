@@ -4,6 +4,8 @@ import numpy as np
 import tensorflow as tf
 from CifarCNN import define_training, define_model, accuracy
 from TFRecord_Cifar_load import make_batch
+import matplotlib
+matplotlib.use('GTKAgg')
 import matplotlib.pyplot as plt
 num_steps = 10000
 batch_len = 150
