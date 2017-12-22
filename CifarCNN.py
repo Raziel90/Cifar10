@@ -41,9 +41,9 @@ def accuracy(predictions, labels):
     return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
         / labels.shape[0])
     """
-    # return (100.0 * tf.reduce_mean(tf.argmax(predictions, 1) == labels))
+    return (100.0 * tf.reduce_mean(tf.equal(tf.argmax(predictions, 1), labels)))
     
-    return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
+    # return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
 
 
 def conv_params(patch_sz, prev_depth, curr_depth, stddev=5e-2):
@@ -294,12 +294,12 @@ with tf.Session(graph=graph) as sess:
             # tr_a = accuracy(predictions, batch_labels)
             # val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_a, val_a = sess.run([train_accuracy, valid_accuracy])
-            tr_acc += tr_a[0]
+            tr_acc += tr_a
             # print(type(tr_a[0]))
-            valid_acc += val_a[0]
+            valid_acc += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy:' + str(100.0 * tr_a[0]))
-            print('Validation accuracy:' + str(100.0 * val_a[0]))
+            print('Minibatch accuracy:' + str(100.0 * tr_a))
+            print('Validation accuracy:' + str(100.0 * val_a))
     test_acc = accuracy(test_prediction.eval(), test_labels)
     print('Test accuracy:' + str(100 * sess.run([test_accuracy])[0]))
     coord.request_stop()
