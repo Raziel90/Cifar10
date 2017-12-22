@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 50
+batch_len = 150
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
 INIT_L_RATE = 0.005  # 5e-2
 LEARNING_RATE_DECAY_FACTOR = 0.1
@@ -284,7 +284,7 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 100 == 0):
+        if (step % 500 == 0):
             # summary = sess.run([merged])
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
@@ -295,7 +295,7 @@ with tf.Session(graph=graph) as sess:
             # val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_a, val_a = sess.run([train_accuracy, valid_accuracy])
             tr_acc += tr_a[0]
-            print(type(tr_a[0]))
+            # print(type(tr_a[0]))
             valid_acc += val_a[0]
             print('Minibatch loss at step %d: %f' % (step, l))
             print('Minibatch accuracy:' + str(100.0 * tr_a[0]))
