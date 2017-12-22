@@ -110,16 +110,17 @@ def get_decay_loss():
     )
 
 
-def define_training(logits, global_step):
+def define_training(logits, labels, global_step):
 
     print(tf_train_labels)
     loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=train_model,
-            labels=tf_train_labels
+            logits=logits,
+            labels=labels,
+            name='main_loss'
         )
     )
-    reg_loss = loss #+ get_decay_loss()[0]
+    reg_loss = loss + get_decay_loss()[0]
     num_batches_per_epoch = examples_per_mode['train'] / batch_len
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
     learning_rate = tf.train.exponential_decay(
@@ -190,30 +191,36 @@ graph = tf.Graph()
 with graph.as_default() as g:
 
     summary_writer = tf.summary.FileWriter('./log', g)
-    tf_train_dataset, tf_train_labels = make_batch(
+    tf_train_dataset_bat, tf_train_labels_bat = make_batch(
         batch_len, 'train', basepath='./cifar-10-batches-py')
-    tf_valid_dataset, tf_valid_dataset_labels = make_batch(
+    tf_valid_dataset_bat, tf_valid_dataset_labels_bat = make_batch(
         batch_len, 'validation', basepath='./cifar-10-batches-py')
-    tf_test_dataset, tf_test_dataset_labels = make_batch(
+    tf_test_dataset_bat, tf_test_dataset_labels_bat = make_batch(
         batch_len, 'test', basepath='./cifar-10-batches-py')
     # The op for initializing the variables.
 
     global_step = tf.Variable(0)
     init_learning_rate = tf.placeholder(tf.float32)
-    # tf_train_dataset = tf.placeholder(tf.float32,shape=(batch_size,image_size,image_size,num_channels))
-    # tf_train_labels =
-    # tf.placeholder(tf.float32,shape=(batch_size,num_labels))
 
-    # tf_valid_dataset = tf.constant(valid_dataset)
-    # tf_test_dataset = tf.constant(test_dataset)
+    tf_train_data = tf.placeholder(tf.float32, shape=(
+        batch_len, image_size, image_size, num_channels))
+    tf_train_labels = tf.placeholder(tf.int64, shape=(
+        batch_len, num_labels))
+
+    tf_valid_dataset = tf.placeholder(tf.float32, shape=(
+        examples_per_mode['validation'], num_labels))
+    tf_test_dataset = tf.placeholder(tf.float32, shape=(
+        examples_per_mode['validation'], num_labels))
+
     with tf.variable_scope('training') as scope:
-        train_model = define_model(tf_train_dataset, training_flg=True)
-        loss, optimizer = define_training(train_model, global_step)
+        train_model = define_model(tf_train_data, training_flg=True)
+        loss, optimizer = define_training(
+            train_model, tf_train_labels, global_step)
 
         scope.reuse_variables()
-        valid_model = define_model(tf_valid_dataset)
+        
         train_prediction = tf.nn.softmax(train_model)
-        valid_prediction = tf.nn.softmax(valid_model)
+        valid_prediction = tf.nn.softmax(define_model(tf_valid_dataset))
         test_prediction = tf.nn.softmax(define_model(tf_test_dataset))
 
     # tr_accuracy=tf.metrics.accuracy(predictions=tf.argmax(train_prediction, 1), labels=tf.argmax(tf_train_labels,1))
@@ -234,9 +241,10 @@ with tf.Session(graph=graph) as sess:
     sess.run(init_op)
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
+
     valid_data, valid_labels, test_data, test_labels = sess.run(
-        [tf_valid_dataset, tf_valid_dataset_labels,
-         tf_test_dataset, tf_test_dataset_labels])
+        [tf_valid_dataset_bat, tf_valid_dataset_labels_bat,
+         tf_test_dataset_bat, tf_test_dataset_labels_bat])
     print('Initialized')
     tr_acc = []
     valid_acc = []
@@ -246,10 +254,12 @@ with tf.Session(graph=graph) as sess:
     for step in range(num_steps + 1):
 
         batch_data, batch_labels = sess.run(
-            [tf_train_dataset, tf_train_labels])
+            [tf_train_dataset_bat, tf_train_labels_bat])
 
-        feed_dict = {tf_train_dataset: batch_data,
+        feed_dict = {tf_train_data: batch_data,
                      tf_train_labels: batch_labels,
+                     tf_valid_dataset: valid_data,
+                     tf_test_dataset: test_data,
                      init_learning_rate: INIT_L_RATE}
         _, l, predictions = sess.run(
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
