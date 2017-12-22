@@ -139,7 +139,7 @@ def define_training(logits, labels, start_lr, global_step):
         decay_steps=decay_steps, decay_rate=LEARNING_RATE_DECAY_FACTOR,
         staircase=True)
     """
-    tf.summary.scalar('learning_rate', learning_rate)
+    # tf.summary.scalar('learning_rate', learning_rate)
     for var in tf.trainable_variables():
         tf.summary.histogram(var.op.name, var)
 
@@ -292,7 +292,7 @@ with tf.Session(graph=graph) as sess:
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
-            summary_writer.add_summary(summary, step)
+            # summary_writer.add_summary(summary, step)
 
             # tr_a = accuracy(predictions, batch_labels)
             # val_a = accuracy(valid_prediction.eval(), valid_labels)
