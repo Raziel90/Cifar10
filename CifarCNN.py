@@ -12,7 +12,7 @@ num_labels = 10
 num_channels = 3  # RGB
 batch_len = 50
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 0.0005  # 5e-2
+INIT_L_RATE = 0.005  # 5e-2
 LEARNING_RATE_DECAY_FACTOR = 0.1
 NUM_EPOCHS_PER_DECAY = 350.0
 
@@ -121,7 +121,7 @@ def get_decay_loss():
     )
 
 
-def define_training(logits, labels, start_lr, global_step):
+def define_training(logits, labels, global_step):
 
     loss = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -133,17 +133,16 @@ def define_training(logits, labels, start_lr, global_step):
     reg_loss = loss + get_decay_loss()[0]
     num_batches_per_epoch = examples_per_mode['train'] / batch_len
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
-    """
     learning_rate = tf.train.exponential_decay(
-        learning_rate=start_lr, global_step=global_step,
+        learning_rate=init_learning_rate, global_step=global_step,
         decay_steps=decay_steps, decay_rate=LEARNING_RATE_DECAY_FACTOR,
         staircase=True)
-    """
-    # tf.summary.scalar('learning_rate', learning_rate)
+    tf.summary.scalar('learning_rate', learning_rate)
     for var in tf.trainable_variables():
         tf.summary.histogram(var.op.name, var)
 
-    optimizer = tf.train.AdamOptimizer().minimize(reg_loss, global_step=global_step)
+    optimizer = tf.train.AdamOptimizer(
+        learning_rate).minimize(reg_loss, global_step=global_step)
 
     return reg_loss, optimizer
 
@@ -232,7 +231,7 @@ with graph.as_default() as g:
     with tf.variable_scope('training') as scope:
         train_model = define_model(tf_train_dataset_bat, training_flg=True)
         loss, optimizer = define_training(
-            train_model, tf_train_labels_bat, init_learning_rate, global_step)
+            train_model, tf_train_labels_bat, global_step)
 
         scope.reuse_variables()
 
@@ -262,12 +261,13 @@ with tf.Session(graph=graph) as sess:
     sess.run(init_op)
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-
+    """
     valid_data, valid_labels, test_data, test_labels = sess.run(
         [tf_valid_dataset_bat,
          tf_valid_dataset_labels_bat,
          tf_test_dataset_bat,
          tf_test_dataset_labels_bat])
+	"""
     print('Initialized')
     tr_acc = []
     valid_acc = []
@@ -280,15 +280,18 @@ with tf.Session(graph=graph) as sess:
         # batch_data, batch_labels = sess.run(
         #    [tf_train_dataset_bat, tf_train_labels_bat])
         # print(batch_labels.shape)
-        feed_dict = {
+        feed_dict = {  # tf_train_data: batch_data,
+            # tf_train_labels: batch_labels,
+            # tf_valid_dataset: np.array(valid_data).astype(float),
+            # tf_test_dataset: test_data,
             init_learning_rate: INIT_L_RATE}
         _, l, predictions = sess.run(
             [optimizer, loss, train_prediction], feed_dict=feed_dict)
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 1000 == 0):
-            summary = sess.run([merged])
+        if (step % 100 == 0):
+            # summary = sess.run([merged])
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             # run_metadata = tf.RunMetadata()
@@ -300,10 +303,11 @@ with tf.Session(graph=graph) as sess:
             tr_acc += tr_a
             valid_acc += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy: %.1f%%' %  tr_a)
+            print('Minibatch accuracy: %.1f%%' % tr_a)
             print('Validation accuracy: %.1f%%' % val_a)
-    test_acc = accuracy(test_prediction.eval(), test_labels)
-    print('Test accuracy: %.1f%%' % sess.run([test_accuracy]))
+    # accuracy(test_prediction.eval(), test_labels)
+    test_acc = sess.run([test_accuracy])
+    print('Test accuracy: %.1f%%' % test_acc)
     coord.request_stop()
     coord.join(threads)
     plt.plot(np.array(tr_acc))
