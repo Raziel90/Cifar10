@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 150
+batch_len = 50
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
 INIT_L_RATE = 0.005  # 5e-2
 LEARNING_RATE_DECAY_FACTOR = 0.1
@@ -41,6 +41,7 @@ def accuracy(predictions, labels):
     return (100.0 * np.sum(np.argmax(predictions, 1) == labels)
         / labels.shape[0])
     """
+    
     return (100.0 * tf.reduce_mean(tf.equal(tf.argmax(predictions, 1), labels)))
     
     # return tf.metrics.accuracy(labels, tf.argmax(predictions, 1))
@@ -284,7 +285,7 @@ with tf.Session(graph=graph) as sess:
         # val_pred += [valid_model.eval()]
         # if len(val_pred) > 1:
         #    print(np.sum(val_pred[-1] - val_pred[-2]))
-        if (step % 500 == 0):
+        if (step % 100 == 0):
             # summary = sess.run([merged])
 
             # run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
@@ -295,13 +296,12 @@ with tf.Session(graph=graph) as sess:
             # val_a = accuracy(valid_prediction.eval(), valid_labels)
             tr_a, val_a = sess.run([train_accuracy, valid_accuracy])
             tr_acc += tr_a
-            # print(type(tr_a[0]))
             valid_acc += val_a
             print('Minibatch loss at step %d: %f' % (step, l))
-            print('Minibatch accuracy:' + str(100.0 * tr_a))
-            print('Validation accuracy:' + str(100.0 * val_a))
+            print('Minibatch accuracy: %.1f%%' % 100.0 * tr_a)
+            print('Validation accuracy: %.1f%%' % 100.0 * val_a)
     test_acc = accuracy(test_prediction.eval(), test_labels)
-    print('Test accuracy:' + str(100 * sess.run([test_accuracy])[0]))
+    print('Test accuracy: %.1f%%' % sess.run([test_accuracy]))
     coord.request_stop()
     coord.join(threads)
     plt.plot(np.array(tr_acc))
