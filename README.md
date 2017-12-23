@@ -3,7 +3,7 @@
 
 --- Realizzata in Tensorflow v1.0 ---
 
-A regime raggiunge 70% di accuracy su test e validation, migliorando con dei tweak (sopratutto riguardanti la keep probability di dropout)
+A regime raggiunge 70% di accuracy su test e validation, migliorabili con dei tweak (sopratutto riguardanti la keep probability di dropout)
 
 # eseguire i seguenti script nella cartella origine della repository
 
