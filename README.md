@@ -1,6 +1,8 @@
 # Cifar10
 5Layered - CNN on the CIFAR10 dataset (https://www.cs.toronto.edu/~kriz/cifar.html) using TF Records
 
+A regime raggiunge 70% di accuracy su test e validation, migliorando con dei tweak (sopratutto riguardanti la keep probability di dropout)
+
 # eseguire i seguenti script nella cartella origine della repository
 
 #scarica e converti in TFRecord il dataset
