@@ -71,6 +71,15 @@ with tf.Session(graph=graph) as sess:
     loss_in_time = []
     val_pred = []
     steps = []
+
+    # clean previous executions
+    with open('dump/training', 'w') as myfile:
+        myfile.write('')
+    with open('dump/valid', 'w') as myfile:
+        myfile.write('')
+    with open('dump/valid', 'w') as myfile:
+        myfile.write('')
+
     # print(valid_data[0].dtype, np.array(valid_data).shape)
     for step in range(num_steps + 1):
 
@@ -86,11 +95,12 @@ with tf.Session(graph=graph) as sess:
             valid_acc += val_a
 
             with open('dump/training', 'a') as myfile:
-                myfile.write(str(tr_a) + '\n')
+                myfile.write(str(step) + ',' + str(tr_a) + '\n')
             with open('dump/valid', 'a') as myfile:
-                myfile.write(str(val_a) + '\n')
+                myfile.write(str(step) + ',' + str(val_a) + '\n')
             with open('dump/valid', 'a') as myfile:
-                myfile.write(str(sess.run([test_accuracy])[0]) + '\n')
+                myfile.write(str(step) + ',' +
+                             str(sess.run([test_accuracy])[0]) + '\n')
 
             summary_writer = tf.summary.FileWriter(
                 '~/code/Cifar10/log/', sess.graph)
