@@ -71,6 +71,15 @@ with tf.Session(graph=graph) as sess:
     loss_in_time = []
     val_pred = []
     steps = []
+
+    # clean previous executions
+    with open('dump/training', 'w') as myfile:
+        myfile.write('')
+    with open('dump/valid', 'w') as myfile:
+        myfile.write('')
+    with open('dump/valid', 'w') as myfile:
+        myfile.write('')
+
     # print(valid_data[0].dtype, np.array(valid_data).shape)
     for step in range(num_steps + 1):
 
