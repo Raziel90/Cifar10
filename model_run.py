@@ -2,8 +2,8 @@
 """
 import numpy as np
 import tensorflow as tf
-from CifarCNN import define_training, define_model, accuracy
-from TFRecord_Cifar_load import make_batch
+from CifarCNN_Architecture import define_training, define_model, accuracy
+from TFRecord_load_Cifar import make_batch
 # import matplotlib
 # matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
@@ -85,10 +85,12 @@ with tf.Session(graph=graph) as sess:
             tr_acc += tr_a
             valid_acc += val_a
 
-            with open('dump_acc/training', 'a') as file:
+            with open('dump/training', 'a') as myfile:
                 myfile.writeline(tr_a)
-            with open('dump_acc/valid', 'a') as file:
-                myfile.writeline(valid_a)
+            with open('dump/valid', 'a') as myfile:
+                myfile.writeline(val_a)
+            with open('dump/valid', 'a') as myfile:
+                myfile.writeline(sess.run([test_accuracy])[0])
 
             summary_writer = tf.summary.FileWriter(
                 '~/code/Cifar10/log/', sess.graph)
@@ -100,14 +102,16 @@ with tf.Session(graph=graph) as sess:
             print('Minibatch accuracy: %.1f%%' % tr_a)
             print('Validation accuracy: %.1f%%' % val_a)
 
+            """
             plt.plot(x=np.array(steps), y=np.array(tr_acc))
             plt.xlabel('batch_steps')
             plt.ylabel('train_accuracy')
             plt.axis([0, step + 1, 0, 101])
             plt.show(block=False)
+            """
     # accuracy(test_prediction.eval(), test_labels)
     test_acc = sess.run([test_accuracy])
-    print(test_acc)
-    # print('Test accuracy: %.1f%%' % test_acc)
+    # print(test_acc)
+    print('Test accuracy: %.1f%%' % test_acc[0])
     coord.request_stop()
     coord.join(threads)
