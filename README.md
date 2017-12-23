@@ -15,3 +15,5 @@ tensorboard --logdir=$PWD --debug
 
 
 #I dettagli di architettura e estrazione dei dati sono in CifarCNN_Architecture.py e TFR_Cifar10_load.py
+
+#in caso di problemi con tensorboard model_run scrive ogni 100 batches le accuracies di training validation e test nei rispettivi files nella cartella dump
