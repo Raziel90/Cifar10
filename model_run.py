@@ -95,11 +95,12 @@ with tf.Session(graph=graph) as sess:
             valid_acc += val_a
 
             with open('dump/training', 'a') as myfile:
-                myfile.write(str(tr_a) + '\n')
+                myfile.write(str(step) + ',' + str(tr_a) + '\n')
             with open('dump/valid', 'a') as myfile:
-                myfile.write(str(val_a) + '\n')
+                myfile.write(str(step) + ',' + str(val_a) + '\n')
             with open('dump/valid', 'a') as myfile:
-                myfile.write(str(sess.run([test_accuracy])[0]) + '\n')
+                myfile.write(str(step) + ',' +
+                             str(sess.run([test_accuracy])[0]) + '\n')
 
             summary_writer = tf.summary.FileWriter(
                 '~/code/Cifar10/log/', sess.graph)
