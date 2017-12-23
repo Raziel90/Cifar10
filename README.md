@@ -1,12 +1,14 @@
 # Cifar10
 5Layered - CNN on the CIFAR10 dataset (https://www.cs.toronto.edu/~kriz/cifar.html) using TF Records
 
+--- Realizzata in Tensorflow v1.0 ---
+
 A regime raggiunge 70% di accuracy su test e validation, migliorando con dei tweak (sopratutto riguardanti la keep probability di dropout)
 
 # eseguire i seguenti script nella cartella origine della repository
 
 #scarica e converti in TFRecord il dataset
-
+#questa parte dello script richiede python 2.7
 python2 Import_Cifar10.py 
 
 #esegui training e evalutazione
