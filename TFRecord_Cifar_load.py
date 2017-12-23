@@ -45,6 +45,11 @@ def TFR_parse(example):
         
     return image, label
 
+def random_distort_image(image):
+    image = tf.image.random_flip_left_right(image)
+    image = tf.image.random_contrast(image, lower=0.2, upper=1.0)
+    image = tf.image.random_brightness(image, max_delta=63)
+    return image
 
 def make_batch(batch_size=100, mode='train', basepath='./'):
 
@@ -57,10 +62,12 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
         # so that the shuffeling is good enough
         min_examples = int(examples_per_mode['train'] * 0.4)
 
+        #  image = random_distort_image(image)
         data_batch, label_batch = tf.train.shuffle_batch(
             [image, label], batch_size=batch_size,
             capacity=examples_per_mode['train'],
             min_after_dequeue=min_examples, num_threads=8)
+
 
     else:
 

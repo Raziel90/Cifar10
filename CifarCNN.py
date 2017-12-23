@@ -10,7 +10,7 @@ import tensorflow as tf
 image_size = 32
 num_labels = 10
 num_channels = 3  # RGB
-batch_len = 200
+#  batch_len = 200
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
 INIT_L_RATE = 1e-4
 LEARNING_RATE_DECAY_FACTOR = 0.1
@@ -132,9 +132,12 @@ def define_training(logits, labels, start_lrate, global_step):
             name='main_loss'
         )
     )
+    tf.summary.scalar('cross_entropy_loss', loss)
+
     reg_loss = loss + get_decay_loss()[0]
-    num_batches_per_epoch = examples_per_mode['train'] / batch_len
+    num_batches_per_epoch = examples_per_mode['train'] / logits.get_shape().as_list()[0]
     decay_steps = int(num_batches_per_epoch * NUM_EPOCHS_PER_DECAY)
+    
     learning_rate = tf.train.exponential_decay(
         learning_rate=start_lrate, global_step=global_step,
         decay_steps=decay_steps, decay_rate=LEARNING_RATE_DECAY_FACTOR,
@@ -152,8 +155,6 @@ def define_training(logits, labels, start_lrate, global_step):
 def define_model(data, training_flg=False):
     keep1 = (training_flg * keep_prob + (not training_flg)).tolist()
 
-    # dataph = tf.placeholder(data.dtype, data.shape)
-    # dataph.assign
     hidden_weights = [None] * len(patch_size)
     hidden_bias = [None] * len(patch_size)
     conv_l = [None] * len(patch_size)
