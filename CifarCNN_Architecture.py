@@ -18,13 +18,13 @@ NUM_EPOCHS_PER_DECAY = 350.0
 #num_steps = 10000
 
 # Definition of the Architecture
-patch_size = [3, 3, 3, 3, 3]
+patch_size = [5, 5, 3, 3, 3]
 depth = [32, 32, 64, 64, 128, 128]
 want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
-keep_prob = np.array([0.9, 0.9, 0.9, 0.9, 0.9])
+keep_prob = np.array([0.8, 0.8, 0.8, 0.8, 0.8])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
