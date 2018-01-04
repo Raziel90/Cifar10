@@ -56,25 +56,31 @@ def make_batch(batch_size=100, mode='train', basepath='./'):
     filename = get_files(basepath, mode)
     print(filename)
     image, label = TFR_parse(serialize(filename))
-    image = tf.image.per_image_standardization(image)
+
 
     if mode == 'train':
         # so that the shuffeling is good enough
         min_examples = int(examples_per_mode['train'] * 0.4)
 
-        #  image = random_distort_image(image)
+        image = random_distort_image(image)
+        
+        image_std = tf.image.per_image_standardization(image)
         data_batch, label_batch = tf.train.shuffle_batch(
-            [image, label], batch_size=batch_size,
+            [image_std, label], batch_size=batch_size,
             capacity=examples_per_mode['train'],
             min_after_dequeue=min_examples, num_threads=8)
 
 
-    else:
 
+
+    else:
+        
+        image_std = tf.image.per_image_standardization(image)
         data_batch, label_batch = tf.train.batch(
-            [image, label], batch_size=examples_per_mode[mode],
+            [image_std, label], batch_size=examples_per_mode[mode],
             capacity=examples_per_mode[mode], num_threads=8)
-    tf.summary.image('images', data_batch)
+    tf.summary.image('images/'+mode, data_batch)
+
     #tf.add_to_collection('summaries', image_summary)
     #print(label_batch)
     return data_batch, label_batch

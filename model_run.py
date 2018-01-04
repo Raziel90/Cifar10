@@ -8,8 +8,8 @@ from TFRecord_load_Cifar import make_batch
 # matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 num_steps = 100000
-batch_len = 150
-INIT_L_RATE = 1e-4
+batch_len = 200
+INIT_L_RATE = 1e-3
 
 graph = tf.Graph()
 with graph.as_default() as g:
@@ -71,7 +71,8 @@ with tf.Session(graph=graph) as sess:
     loss_in_time = []
     val_pred = []
     steps = []
-
+    early_stop = {'max_count' : 10, 'count' : 0, 'best_accuracy' : 0.0 ,
+                  'min_step' : 20000}
     # clean previous executions
     with open('dump/training', 'w') as myfile:
         myfile.write('')
@@ -103,7 +104,7 @@ with tf.Session(graph=graph) as sess:
                              str(sess.run([test_accuracy])[0]) + '\n')
 
             summary_writer = tf.summary.FileWriter(
-                '~/code/Cifar10/log/', sess.graph)
+                'log/', sess.graph)
             summary_writer.add_summary(summary, step)
             summary_writer.flush()
             summary_writer.close()
@@ -111,6 +112,14 @@ with tf.Session(graph=graph) as sess:
             print('Minibatch loss at step %d: %f' % (step, l))
             print('Minibatch accuracy: %.1f%%' % tr_a)
             print('Validation accuracy: %.1f%%' % val_a)
+            if step > early_stop['min_step']:
+                if val_a > early_stop['best_accuracy']:
+                    early_stop['best_accuracy'] = val_a
+                    early_stop['count'] = 0
+                else:
+                    early_stop['count']+=1
+                    if early_stop['count'] > early_stop['max_count']:
+                        print('Early stopping')
 
             """
             plt.plot(x=np.array(steps), y=np.array(tr_acc))

@@ -12,9 +12,9 @@ num_labels = 10
 num_channels = 3  # RGB
 #  batch_len = 200
 examples_per_mode = {'train': 45000, 'validation': 5000, 'test': 10000}
-INIT_L_RATE = 1e-4
+#  INIT_L_RATE = 1e-4
 LEARNING_RATE_DECAY_FACTOR = 0.1
-NUM_EPOCHS_PER_DECAY = 350.0
+NUM_EPOCHS_PER_DECAY = 250.0
 #num_steps = 10000
 
 # Definition of the Architecture
@@ -24,7 +24,7 @@ want_pooling = [True, False, True, False, True]
 want_norm = [False, True, False, True, False]
 pool_strides = [2, 2, 2, 2, 2]
 weight_decay = [1e-4, 1e-4, 1e-4, 1e-4, 1e-4]
-keep_prob = np.array([0.8, 0.8, 0.8, 0.8, 0.8])
+keep_prob = np.array([0.8, 0.7, 0.7, 0.5, 0.5])
 flattening_value = np.prod(
     np.array(pool_strides)[np.array(want_pooling)]
 ).tolist()  # to flatten the convolution output
