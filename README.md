@@ -3,7 +3,7 @@
 
 --- Realizzata in Tensorflow v1.0 ---
 
-A regime raggiunge 70% di accuracy su test e validation, migliorabili con dei tweak (sopratutto riguardanti la keep probability di dropout)
+A regime supera il 70% di accuracy su test e validation, migliorabili con dei tweak (sopratutto riguardanti la keep probability di dropout)
 
 # eseguire i seguenti script nella cartella origine della repository
 
@@ -18,9 +18,9 @@ python2 Import_Cifar10.py
 python model_run.py
 ```
 
-#eseguire nella cartella tensorboard per vedere le accuracies (in dump ci sono delle versioni già eseguite in un file HTML)
+#eseguire nella cartella della repository tensorboard per vedere le accuracies col seguente comando (in dump ci sono delle versioni già eseguite in un file HTML)
 ```
-tensorboard --logdir=$PWD --debug
+tensorboard --logdir=./log --debug
 ```
 
 
